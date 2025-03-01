@@ -5,7 +5,6 @@ plugins {
 
     // Add the Google services Gradle plugin
     id("com.google.gms.google-services")
-
 }
 
 android {
@@ -51,6 +50,10 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     //Database
     implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation(libs.play.services.auth)
+
+    //google
+    implementation ("com.google.android.gms:play-services-auth:20.7.0")
 
     //Navigation
     val nav_version = "2.8.6"
