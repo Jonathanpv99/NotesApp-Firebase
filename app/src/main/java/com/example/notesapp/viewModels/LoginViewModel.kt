@@ -2,6 +2,10 @@ package com.example.notesapp.viewModels
 
 import android.content.Intent
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.common.api.ApiException
@@ -14,6 +18,8 @@ import kotlinx.coroutines.launch
 class LoginViewModel: ViewModel() {
 
     private val auth: FirebaseAuth = Firebase.auth
+    var showAlert by mutableStateOf(false)
+    var typeOfLogin by mutableStateOf(0)
 
     fun loginWithEmailAndPasswprd(email: String, password: String, onSuccess: () -> Unit){
         viewModelScope.launch {
@@ -23,7 +29,8 @@ class LoginViewModel: ViewModel() {
                         if(task.isSuccessful){
                             onSuccess()
                         }else{
-
+                            typeOfLogin = 0
+                            showAlert = true
                         }
                     }
             }catch (e: Exception){
@@ -32,6 +39,11 @@ class LoginViewModel: ViewModel() {
         }
     }
 
+    fun closeAlert(){
+        showAlert = false
+    }
+
+    //login with google
     fun loginWithGoogle(idToken: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
@@ -41,7 +53,8 @@ class LoginViewModel: ViewModel() {
                         if (task.isSuccessful) {
                             onSuccess()
                         } else {
-                            onError(task.exception?.message ?: "Error desconocido en autenticación con Google")
+                            typeOfLogin = 1
+                            showAlert = true
                         }
                     }
             } catch (e: Exception) {

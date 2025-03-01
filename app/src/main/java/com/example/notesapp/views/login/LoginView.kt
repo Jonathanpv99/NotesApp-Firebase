@@ -34,6 +34,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.notesapp.R
+import com.example.notesapp.components.Alert
 import com.example.notesapp.viewModels.LoginViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -131,6 +132,22 @@ fun LoginView(
                 Spacer(modifier = Modifier.size(8.dp))
                 Text("Ingresar con Google", fontWeight = FontWeight.Bold, color = Color.White)
             }
+        }
+
+        val alertMessage = when (loginVM.typeOfLogin) {
+            0 -> "¡Usuario y/o contraseña incorrectos!"
+            1 -> "¡No se pudo acceder mediante Google, inténtalo más tarde!"
+            else -> "¡Ocurrió un error desconocido!"
+        }
+
+        if (loginVM.showAlert) {
+            Alert(
+                title = "Alerta",
+                message = alertMessage, // Mensaje dinámico
+                confirmText = "Aceptar",
+                onConfirmClick = { loginVM.closeAlert() },
+                onDismissClick = { loginVM.closeAlert() }
+            )
         }
     }
 }
