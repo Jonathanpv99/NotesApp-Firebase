@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -68,6 +70,7 @@ fun LoginView(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
     ) {
         var email by remember { mutableStateOf("") }
@@ -80,7 +83,7 @@ fun LoginView(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 30.dp, end = 30.dp)
+                .padding(top = 20.dp, start = 30.dp, end = 30.dp)
         )
         OutlinedTextField(
             value = password,
@@ -90,14 +93,14 @@ fun LoginView(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 30.dp, end = 30.dp)
+                .padding(top = 20.dp, start = 30.dp, end = 30.dp)
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         Button(
             onClick = {
-                loginVM.loginWithEmailAndPasswprd(email, password){
+                loginVM.loginWithEmailAndPassword(email, password){
                     navController.navigate("Home")
                 }
             },
@@ -118,7 +121,13 @@ fun LoginView(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 30.dp, end = 30.dp)
+                .padding(start = 30.dp, end = 30.dp),
+            colors = ButtonColors(
+                containerColor = Color.DarkGray,
+                contentColor = Color.White,
+                disabledContentColor = Color.Gray,
+                disabledContainerColor = Color.White,
+            )
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -143,7 +152,7 @@ fun LoginView(
         if (loginVM.showAlert) {
             Alert(
                 title = "Alerta",
-                message = alertMessage, // Mensaje dinámico
+                message = alertMessage,
                 confirmText = "Aceptar",
                 onConfirmClick = { loginVM.closeAlert() },
                 onDismissClick = { loginVM.closeAlert() }
