@@ -79,7 +79,7 @@ fun LoginView(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it},
-            label = { Text("Email") },
+            label = { Text("Correo") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier
                 .fillMaxWidth()
@@ -88,7 +88,7 @@ fun LoginView(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it},
-            label = { Text("Password") },
+            label = { Text("Contraseña") },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier

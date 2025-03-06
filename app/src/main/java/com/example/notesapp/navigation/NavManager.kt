@@ -8,6 +8,7 @@ import com.example.notesapp.viewModels.LoginViewModel
 import com.example.notesapp.viewModels.NotesViewModel
 import com.example.notesapp.views.login.BlankView
 import com.example.notesapp.views.login.TabsView
+import com.example.notesapp.views.notes.AddNoteView
 import com.example.notesapp.views.notes.HomeView
 
 @Composable
@@ -28,6 +29,9 @@ fun NavManager(
         }
         composable("Home"){
             HomeView(navController, notesVM)
+        }
+        composable("AddNoteView"){
+            AddNoteView(navController, notesVM)
         }
     }
 }

@@ -51,7 +51,10 @@ dependencies {
     //Database
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation(libs.play.services.auth)
-
+    //guarda imagenes y audio
+    implementation ("com.google.firebase:firebase-storage-ktx")
+    //libreria para imagenes
+    implementation ("io.coil-kt:coil-compose:2.2.2")
     //google
     implementation ("com.google.android.gms:play-services-auth:20.7.0")
 
