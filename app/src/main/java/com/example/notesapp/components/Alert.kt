@@ -16,8 +16,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -25,6 +27,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -83,4 +87,54 @@ fun Alert(
             }
         }
     }
+}
+
+@Composable
+fun AudioRecordingDialog(
+    isRecording: Boolean,
+    onStartRecording: () -> Unit,
+    onStopRecording: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = { Text("Grabación de Audio") },
+        text = {
+            Column {
+                Text(if (isRecording) "Grabando..." else "Presiona 'Grabar' para iniciar.")
+                if (isRecording) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (isRecording) {
+                        onStopRecording()
+                    } else {
+                        onStartRecording()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isRecording) Color.Red else Color(0xFF0B8F26),
+                )
+            ) {
+                Text(
+                    if (isRecording) "Detener" else "Grabar",
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        },
+        dismissButton = {
+            Button(onClick = { onDismiss() }) {
+                Text("Cancelar", fontWeight = FontWeight.Bold, color = Color.White)
+            }
+        }
+    )
 }

@@ -12,7 +12,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -20,9 +28,24 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,19 +65,26 @@ import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddNoteView(
+fun EditNoteView(
     navController: NavController,
-    notesVM: NotesViewModel
+    notesVM: NotesViewModel,
+    idNote: String
 ) {
-    var title by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
-    var selectedDate by remember { mutableStateOf("") }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    LaunchedEffect(Unit) {
+        notesVM.getNoteById(idNote)
+    }
+    val state = notesVM.state
+    var imageUri by remember(state.imageUrl) {
+        mutableStateOf(state.imageUrl.let { Uri.parse(it) })
+    }
     var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
     // Estados de grabación y reproducción
     var isRecording by remember { mutableStateOf(false) }
     var isPlaying by remember { mutableStateOf(false) }
-    var audioFilePath by remember { mutableStateOf<String?>(null) }
+    var audioFilePath by remember(state.audioUrl) {
+        mutableStateOf(state.audioUrl)
+    }
 
     val mediaRecorder = remember { MediaRecorder() }
     val mediaPlayer = remember { MediaPlayer() }
@@ -80,19 +110,20 @@ fun AddNoteView(
         }
     }
 
-    val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) {
-        it?.let {
-            imageBitmap = it
-            imageUri = null // Reset imageUri if a new photo is taken
+    val takePicture =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) {
+            it?.let {
+                imageBitmap = it
+                imageUri = null // Reset imageUri if a new photo is taken
+            }
         }
-    }
 
     // Date picker setup
     val calendar = Calendar.getInstance()
     val datePicker = DatePickerDialog(
         context,
         { _, year, month, dayOfMonth ->
-            selectedDate = "$dayOfMonth/${month + 1}/$year"
+             notesVM.onValue("$dayOfMonth/${month + 1}/$year", "reminder")
         },
         calendar.get(Calendar.YEAR),
         calendar.get(Calendar.MONTH),
@@ -134,19 +165,32 @@ fun AddNoteView(
 
     val startPlayback: () -> Unit = {
         try {
-            mediaPlayer.apply {
-                setDataSource(audioFilePath)
-                prepare()
-                start()
+            mediaPlayer.reset() // 👈 importante: reseteamos antes de usar
+
+            mediaPlayer.setDataSource(audioFilePath)
+            mediaPlayer.setOnPreparedListener {
+                it.start()
                 isPlaying = true
-                setOnCompletionListener {
-                    isPlaying = false
-                }
             }
+            mediaPlayer.setOnCompletionListener {
+                isPlaying = false
+            }
+            mediaPlayer.setOnErrorListener { mp, what, extra ->
+                Log.e("AddNoteView", "Error en reproducción: what=$what, extra=$extra")
+                isPlaying = false
+                true
+            }
+            mediaPlayer.prepare() // para archivo local
+            mediaPlayer.start()
+            isPlaying = true
+
         } catch (e: IOException) {
             Log.e("AddNoteView", "Error al reproducir audio: ${e.message}")
+        } catch (e: IllegalStateException) {
+            Log.e("AddNoteView", "MediaPlayer en estado ilegal: ${e.message}")
         }
     }
+
 
     val stopPlayback: () -> Unit = {
         mediaPlayer.apply {
@@ -156,10 +200,15 @@ fun AddNoteView(
         isPlaying = false
     }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer.release()
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nueva Nota") },
+                title = { Text("Editar Nota") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -180,16 +229,16 @@ fun AddNoteView(
             verticalArrangement = Arrangement.Center,
         ) {
             OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
+                value = state.title,
+                onValueChange = { notesVM.onValue( it, "title") },
                 label = { Text("Título") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(30.dp)
             )
             OutlinedTextField(
-                value = note,
-                onValueChange = { note = it },
+                value = state.note,
+                onValueChange = { notesVM.onValue( it, "note") },
                 label = { Text("Nota") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -199,7 +248,9 @@ fun AddNoteView(
             )
 
             Spacer(modifier = Modifier.height(15.dp))
-            Text("Imagen", modifier = Modifier.padding(start = 30.dp).graphicsLayer(alpha = 0.5f))
+            Text("Imagen", modifier = Modifier
+                .padding(start = 30.dp)
+                .graphicsLayer(alpha = 0.5f))
             Row(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 modifier = Modifier.fillMaxWidth()
@@ -233,7 +284,7 @@ fun AddNoteView(
             Spacer(modifier = Modifier.height(10.dp))
 
             // Display selected image
-            Row (modifier = Modifier.padding(start = 60.dp)) {
+            Row(modifier = Modifier.padding(start = 60.dp)) {
                 when {
                     imageBitmap != null -> {
                         Image(
@@ -256,7 +307,9 @@ fun AddNoteView(
                         AsyncImage(
                             model = imageUri,
                             contentDescription = null,
-                            modifier = Modifier.size(250.dp).padding(start = 10.dp)
+                            modifier = Modifier
+                                .size(250.dp)
+                                .padding(start = 10.dp)
                         )
                         IconButton(
                             onClick = { imageUri = null },
@@ -272,7 +325,9 @@ fun AddNoteView(
             }
 
             Spacer(modifier = Modifier.height(17.dp))
-            Text("Audio", modifier = Modifier.padding(start = 30.dp).graphicsLayer(alpha = 0.5f))
+            Text("Audio", modifier = Modifier
+                .padding(start = 30.dp)
+                .graphicsLayer(alpha = 0.5f))
 
             // Audio recording section
             Column(
@@ -305,7 +360,7 @@ fun AddNoteView(
                     )
                 }
 
-                if (audioFilePath != null && !isRecording) {
+                if (audioFilePath != "" && !isRecording) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -344,7 +399,7 @@ fun AddNoteView(
                                 Log.e("AddNoteView", "Error al eliminar archivo: ${e.message}")
                             }
                             // Resetear estado
-                            audioFilePath = null
+                            audioFilePath = ""
                         }
                         ) {
                             Icon(
@@ -358,7 +413,7 @@ fun AddNoteView(
             }
 
             OutlinedTextField(
-                value = selectedDate,
+                value = state.reminder,
                 onValueChange = {},
                 enabled = false,
                 label = { Text("Fecha limite") },
@@ -374,16 +429,15 @@ fun AddNoteView(
             Button(
                 onClick = {
                     // Handle save with all media files
-                    notesVM.saveNewNoteWithMedia(
-                        title = title,
-                        note = note,
+                    notesVM.editNoteWithMedia(
+                        idNote = idNote,
                         imageUri = imageUri,
                         imageBitmap = imageBitmap,
                         audioFilePath = audioFilePath,
-                        reminder = selectedDate,
                         context = context,
                         onSuccess = {
-                            Toast.makeText(context, "Nota guardada con éxito", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Nota editada con éxito", Toast.LENGTH_SHORT)
+                                .show()
                             navController.navigate("Home")
                         },
                         onError = { errorMsg ->
@@ -392,16 +446,20 @@ fun AddNoteView(
                     )
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF0B8F26),
+                    containerColor = Color(0xFFFBC02D),
                     contentColor = Color.White,
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(30.dp),
             ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Guardar", tint = Color.White)
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Editar",
+                    tint = Color.White
+                )
                 Spacer(modifier = Modifier.size(8.dp))
-                Text("Guardar Nota", fontWeight = FontWeight.Bold)
+                Text("Editar Nota", fontWeight = FontWeight.Bold)
             }
         }
     }

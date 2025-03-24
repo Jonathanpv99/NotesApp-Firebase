@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.notesapp.components.CardNote
 import com.example.notesapp.viewModels.NotesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,7 +85,13 @@ fun HomeView(
 
             LazyColumn {
                 items(datos){ item ->
-                    Text(item.title)
+                    CardNote(
+                        title = item.title,
+                        note = item.note,
+                        date = item.createAt,
+                    ) {
+                        navController.navigate("EditNoteView/${item.idNote}")
+                    }
                 }
             }
         }
