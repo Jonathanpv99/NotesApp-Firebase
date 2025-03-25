@@ -149,6 +149,14 @@ class NotesViewModel : ViewModel() {
         }
     }
 
+    // Función para eliminar un archivo local si existe
+    private fun deleteLocalFile(filePath: String, context: Context) {
+        val file = File(context.filesDir, filePath)
+        if (file.exists()) {
+            file.delete()
+        }
+    }
+
     fun editNoteWithMedia(
         idNote: String,
         imageUri: Uri?,
@@ -164,17 +172,34 @@ class NotesViewModel : ViewModel() {
             try {
                 // Detectar cambios en imagen
                 val imageLocalPath = when {
-                    imageUri != null -> saveUriToLocalStorage(imageUri, "images", userId, context)
+                    imageUri != null -> {
+                        val imageUrlParsed = state.imageUrl.let { Uri.parse(it) }
+
+                        if (imageUrlParsed?.toString() != imageUri.toString()) {
+                            saveUriToLocalStorage(imageUri, "images", userId, context)
+                        } else {
+                            state.imageUrl
+                        }
+                    }
                     imageBitmap != null -> saveBitmapToLocalStorage(imageBitmap, "images", userId, context)
-                    else -> state.imageUrl // no hubo cambio
+                    else -> {
+                        // Si se eliminó la imagen, eliminar el archivo local
+                        state.imageUrl.let { deleteLocalFile(it, context) }
+                        ""
+                    }
                 }
 
                 // Detectar cambios en audio
-                val audioLocalPath = if (audioFilePath != null && audioFilePath != state.audioUrl) {
-                    copyAudioToLocalStorage(audioFilePath, "audios", userId, context)
-                } else {
-                    state.audioUrl // no hubo cambio
+                val audioLocalPath = when {
+                    audioFilePath.isNullOrEmpty() -> {
+                        // Si se eliminó el audio, eliminar el archivo local
+                        state.audioUrl.let { deleteLocalFile(it, context) }
+                        ""
+                    }
+                    audioFilePath != state.audioUrl -> copyAudioToLocalStorage(audioFilePath, "audios", userId, context)
+                    else -> state.audioUrl // No hubo cambio
                 }
+
 
                 // Crear nota editada
                 val editNote = NoteModel(

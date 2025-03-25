@@ -76,7 +76,9 @@ fun EditNoteView(
     }
     val state = notesVM.state
     var imageUri by remember(state.imageUrl) {
-        mutableStateOf(state.imageUrl.let { Uri.parse(it) })
+        mutableStateOf(
+            state.imageUrl.takeIf { it.isNotEmpty() }?.let { Uri.parse(it) }
+        )
     }
     var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
     // Estados de grabación y reproducción
