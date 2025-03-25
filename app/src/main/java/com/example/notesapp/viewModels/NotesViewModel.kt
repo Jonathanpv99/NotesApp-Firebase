@@ -150,8 +150,8 @@ class NotesViewModel : ViewModel() {
     }
 
     // Función para eliminar un archivo local si existe
-    private fun deleteLocalFile(filePath: String, context: Context) {
-        val file = File(context.filesDir, filePath)
+    private fun deleteLocalFile(filePath: String) {
+        val file = File(filePath)
         if (file.exists()) {
             file.delete()
         }
@@ -184,7 +184,7 @@ class NotesViewModel : ViewModel() {
                     imageBitmap != null -> saveBitmapToLocalStorage(imageBitmap, "images", userId, context)
                     else -> {
                         // Si se eliminó la imagen, eliminar el archivo local
-                        state.imageUrl.let { deleteLocalFile(it, context) }
+                        state.imageUrl.let { deleteLocalFile(it) }
                         ""
                     }
                 }
@@ -193,7 +193,7 @@ class NotesViewModel : ViewModel() {
                 val audioLocalPath = when {
                     audioFilePath.isNullOrEmpty() -> {
                         // Si se eliminó el audio, eliminar el archivo local
-                        state.audioUrl.let { deleteLocalFile(it, context) }
+                        state.audioUrl.let { deleteLocalFile(it) }
                         ""
                     }
                     audioFilePath != state.audioUrl -> copyAudioToLocalStorage(audioFilePath, "audios", userId, context)
