@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.notesapp.R
+import com.example.notesapp.components.ImageCompletly
 import com.example.notesapp.viewModels.NotesViewModel
 import java.io.File
 import java.io.IOException
@@ -46,6 +47,10 @@ fun AddNoteView(
     navController: NavController,
     notesVM: NotesViewModel
 ) {
+    //estados para mostrar la imagen completa
+    var showImage by remember { mutableStateOf(false) }
+    var selectedImage by remember { mutableStateOf<Any?>(null) }
+
     var title by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf("") }
@@ -240,6 +245,10 @@ fun AddNoteView(
                             bitmap = imageBitmap!!.asImageBitmap(),
                             contentDescription = null,
                             modifier = Modifier.size(250.dp)
+                                .clickable {
+                                    selectedImage = imageBitmap
+                                    showImage = true
+                                }
                         )
                         IconButton(
                             onClick = { imageBitmap = null },
@@ -256,7 +265,12 @@ fun AddNoteView(
                         AsyncImage(
                             model = imageUri,
                             contentDescription = null,
-                            modifier = Modifier.size(250.dp).padding(start = 10.dp)
+                            modifier = Modifier.size(250.dp)
+                                .padding(start = 10.dp)
+                                .clickable {
+                                    selectedImage = imageUri
+                                    showImage = true
+                                }
                         )
                         IconButton(
                             onClick = { imageUri = null },
@@ -269,6 +283,13 @@ fun AddNoteView(
                         }
                     }
                 }
+            }
+
+            if (showImage) {
+                ImageCompletly(
+                    image = selectedImage,
+                    onDismiss = { showImage = false }
+                )
             }
 
             Spacer(modifier = Modifier.height(17.dp))
