@@ -1,14 +1,10 @@
 package com.example.notesapp.components
 
-import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -24,12 +20,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
@@ -44,17 +38,11 @@ fun ImageCompletly(image: Any?, onDismiss: () -> Unit){
                 .fillMaxSize()
                 .background(Color.Black)
         ) {
-            if (image is ImageBitmap) {
-                ZoomableImage(bitmap = (image))
+            if (image is Bitmap) {
+                val highResBitmap = scaleBitmap(image, 4f) // Duplicamos la resolución
+                ZoomableImage(highResBitmap)
             } else if (image is Uri) {
-                val context = LocalContext.current
-                val bitmap = remember { getBitmapFromUri(context, image) }
-
-                if (bitmap != null) {
-                    ZoomableImage(bitmap = bitmap.asImageBitmap())
-                } else {
-                    Log.e("Error", "No se pudo cargar la imagen desde la cámara")
-                }
+                ZoomableImageUri(uri = image)
             }
 
             IconButton(
@@ -73,13 +61,10 @@ fun ImageCompletly(image: Any?, onDismiss: () -> Unit){
     }
 }
 
-// 🔍 Imagen con zoom (para Bitmap)
+//Imagen con zoom (para Bitmap)
 @Composable
-fun ZoomableImage(bitmap: ImageBitmap) {
+fun ZoomableImage(bitmap: Bitmap) {
     var scale by remember { mutableStateOf(1f) }
-    val state = rememberTransformableState { zoomChange, _, _ ->
-        scale *= zoomChange
-    }
 
     Box(
         modifier = Modifier
@@ -92,7 +77,7 @@ fun ZoomableImage(bitmap: ImageBitmap) {
             .graphicsLayer(scaleX = scale, scaleY = scale)
     ) {
         Image(
-            bitmap = bitmap,
+            bitmap = bitmap.asImageBitmap(), // ✅ Convertimos Bitmap a ImageBitmap
             contentDescription = "Imagen ampliada",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Fit
@@ -100,12 +85,31 @@ fun ZoomableImage(bitmap: ImageBitmap) {
     }
 }
 
-fun getBitmapFromUri(context: Context, uri: Uri): Bitmap? {
-    return try {
-        val inputStream = context.contentResolver.openInputStream(uri)
-        BitmapFactory.decodeStream(inputStream)
-    } catch (e: Exception) {
-        Log.e("Error", "No se pudo convertir URI a Bitmap: ${e.message}")
-        null
+@Composable
+fun ZoomableImageUri(uri: Uri) {
+    var scale by remember { mutableStateOf(1f) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTransformGestures { _, _, zoom, _ ->
+                    scale *= zoom
+                }
+            }
+            .graphicsLayer(scaleX = scale, scaleY = scale)
+    ) {
+        AsyncImage(
+            model = uri,
+            contentDescription = "Imagen ampliada",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Fit
+        )
     }
+}
+
+fun scaleBitmap(bitmap: Bitmap, scaleFactor: Float): Bitmap {
+    val width = (bitmap.width * scaleFactor).toInt()
+    val height = (bitmap.height * scaleFactor).toInt()
+    return Bitmap.createScaledBitmap(bitmap, width, height, true)
 }
