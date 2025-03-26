@@ -25,7 +25,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -451,7 +450,6 @@ fun EditNoteView(
 
             Button(
                 onClick = {
-                    // Handle save with all media files
                     notesVM.editNoteWithMedia(
                         idNote = idNote,
                         imageUri = imageUri,
@@ -469,12 +467,12 @@ fun EditNoteView(
                     )
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFBC02D),
+                    containerColor = Color(0xFFC99705),
                     contentColor = Color.White,
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(30.dp),
+                    .padding(top = 30.dp, start = 30.dp, end = 30.dp),
             ) {
                 Icon(
                     imageVector = Icons.Default.Edit,
@@ -483,6 +481,37 @@ fun EditNoteView(
                 )
                 Spacer(modifier = Modifier.size(8.dp))
                 Text("Editar Nota", fontWeight = FontWeight.Bold)
+            }
+
+            Button(
+                onClick = {
+                    notesVM.deleteNoteWithMedia(
+                        idNote = idNote,
+                        onSuccess = {
+                            Toast.makeText(context, "Nota eliminada con éxito", Toast.LENGTH_SHORT)
+                                .show()
+                            navController.navigate("Home")
+                        },
+                        onError = { errorMsg ->
+                            Toast.makeText(context, "Error: $errorMsg", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFA1506),
+                    contentColor = Color.White,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(30.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Eliminar",
+                    tint = Color.White
+                )
+                Spacer(modifier = Modifier.size(8.dp))
+                Text("Eliminar Nota", fontWeight = FontWeight.Bold)
             }
         }
     }

@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -26,7 +28,8 @@ fun CardNote(
     title: String,
     note: String,
     date: String,
-    onClick: () -> Unit
+    onClickEdit: () -> Unit,
+    onClickDelete: () -> Unit
 ){
     var showCard by remember { mutableStateOf(false) }
 
@@ -45,12 +48,22 @@ fun CardNote(
                     .weight(1f)
             )
             IconButton(
-                onClick = { onClick() }
+                onClick = { onClickEdit() }
             ) {
                 Icon(
                     imageVector = Icons.Default.Edit,
                     contentDescription = ""
                     )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            IconButton(
+                onClick = { onClickDelete() }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "",
+                    tint = Color.Red
+                )
             }
         }
         HorizontalDivider()

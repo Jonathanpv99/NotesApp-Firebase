@@ -226,9 +226,43 @@ class NotesViewModel : ViewModel() {
                     }
 
             } catch (e: Exception) {
-                Log.e("Error Save", "Error al guardar ${e.localizedMessage}")
+                Log.e("Error Edit", "Error al editar ${e.localizedMessage}")
                 withContext(Dispatchers.Main) {
-                    onError("Error al guardar: ${e.localizedMessage}")
+                    onError("Error al geditar: ${e.localizedMessage}")
+                }
+            }
+        }
+    }
+
+    fun deleteNoteWithMedia(
+        idNote: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+               //eliminar archivos locales
+                state.imageUrl.let { deleteLocalFile(it) }
+                state.audioUrl.let { deleteLocalFile(it) }
+
+                // Eliminar en Firestore
+                firestore.collection("Notes").document(idNote).delete()
+                    .addOnSuccessListener {
+                        viewModelScope.launch(Dispatchers.Main) {
+                            onSuccess()
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        viewModelScope.launch(Dispatchers.Main) {
+                            onError("Error al eliminar la nota: ${e.message}")
+                        }
+                    }
+
+            } catch (e: Exception) {
+                Log.e("Error Delete", "Error al eliminar ${e.localizedMessage}")
+                withContext(Dispatchers.Main) {
+                    onError("Error al eliminar: ${e.localizedMessage}")
                 }
             }
         }

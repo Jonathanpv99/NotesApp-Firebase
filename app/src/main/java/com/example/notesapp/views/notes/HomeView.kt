@@ -1,5 +1,6 @@
 package com.example.notesapp.views.notes
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -24,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.notesapp.components.CardNote
@@ -39,7 +41,7 @@ fun HomeView(
     LaunchedEffect(Unit) {
         notesVM.fetchNotes()
     }
-
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -89,8 +91,21 @@ fun HomeView(
                         title = item.title,
                         note = item.note,
                         date = item.createAt,
+                        onClickEdit = {
+                            navController.navigate("EditNoteView/${item.idNote}")
+                        }
                     ) {
-                        navController.navigate("EditNoteView/${item.idNote}")
+                        notesVM.deleteNoteWithMedia(
+                            idNote = item.idNote,
+                            onSuccess = {
+                                Toast.makeText(context, "Nota eliminada con éxito", Toast.LENGTH_SHORT)
+                                    .show()
+                                navController.navigate("Home")
+                            },
+                            onError = { errorMsg ->
+                                Toast.makeText(context, "Error: $errorMsg", Toast.LENGTH_SHORT).show()
+                            }
+                        )
                     }
                 }
             }
